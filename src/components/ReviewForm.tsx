@@ -12,11 +12,23 @@ interface ReviewFormProps {
   saveLabel: string;
   onSave: (receipt: Receipt) => void | Promise<void>;
   onDelete?: () => void;
+  /** 중복이라 저장하지 않기로 했을 때 (사진을 차례로 읽는 중이면 다음 장으로 넘어가기 위해) */
+  onSkipDuplicate?: () => void;
+  skipDuplicateLabel?: string;
 }
 
 const REQUIRED_TEXT = { date: '날짜를 적어주세요.', total: '금액을 적어주세요.' } as const;
 
-export function ReviewForm({ draft, image, existing, saveLabel, onSave, onDelete }: ReviewFormProps) {
+export function ReviewForm({
+  draft,
+  image,
+  existing,
+  saveLabel,
+  onSave,
+  onDelete,
+  onSkipDuplicate,
+  skipDuplicateLabel = '저장 안 함',
+}: ReviewFormProps) {
   const [form, setForm] = useState<Receipt>(draft);
   const [moneyText, setMoneyText] = useState(draft.total === null ? '' : draft.total.toLocaleString('ko-KR'));
   const [touched, setTouched] = useState<ReadonlySet<FieldKey>>(new Set());
@@ -153,8 +165,14 @@ export function ReviewForm({ draft, image, existing, saveLabel, onSave, onDelete
           >
             그래도 저장
           </BigButton>
-          <BigButton variant="plain" onClick={() => setAskDuplicate(false)}>
-            저장 안 함
+          <BigButton
+            variant="plain"
+            onClick={() => {
+              setAskDuplicate(false);
+              onSkipDuplicate?.();
+            }}
+          >
+            {skipDuplicateLabel}
           </BigButton>
         </BottomSheet>
       )}

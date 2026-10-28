@@ -150,6 +150,8 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
         image={image}
         existing={known}
         saveLabel={index + 1 >= total ? '저장' : '저장하고 다음 장'}
+        onSkipDuplicate={goNext}
+        skipDuplicateLabel={index + 1 >= total ? '저장 안 함' : '저장 안 하고 다음 장'}
         onSave={async (receipt) => {
           await saveReceipt(receipt, image);
           setSaved((s) => [...s, receipt]);

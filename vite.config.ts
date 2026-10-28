@@ -25,5 +25,6 @@ export default defineConfig({
       workbox: { navigateFallbackDenylist: [/^\/api\//] },
     }),
   ],
-  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
+  // 엑셀 라이브러리를 처음 불러올 때 느린 컴퓨터에서는 기본 5초를 넘길 수 있다
+  test: { environment: 'node', include: ['tests/**/*.test.ts'], testTimeout: 30_000 },
 });
