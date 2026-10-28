@@ -18,7 +18,7 @@
   - 서버 기록에 한도·시간 초과 원인도 남김(나중에 원인 확인용).
 - **확인:** 가짜 서버 응답으로 화면 흐름을 직접 확인 — 읽을 수 없음(다시 읽기 숨김), 시간 초과 1회(다시 읽기 있음)→2회(숨김, 직접 적기 안내), 직접 적어 저장 후 목록·합계 반영. 자동 테스트 57개 통과. (실제 일본 영수증 재시도는 배포 후 확인 필요)
 - **파일:** `src/lib/problem.ts`(신규), `src/screens/ScanFlow.tsx`, `src/lib/ocrClient.ts`, `shared/receipt.ts`, `api/_lib/errors.ts`(신규), `api/_lib/providers/{types,gemini,claude}.ts`, `api/ocr.ts`, `vercel.json`, `tests/errors.test.ts`(신규)
-- **커밋:** (배포 후 기록)
+- **커밋:** `70114a3`
 
 ### 전체 합계와 월별 합계 추가
 - **전:** 목록 위에는 이번 달 합계 하나만 보였음. 지난 달이나 전체 금액을 보려면 엑셀을 만들어야 했음.
