@@ -14,7 +14,7 @@
 - **확인:** 생성한 QR을 실제로 읽어 내용이 `https://ocr-rho-ashen.vercel.app/#pin=…`(시험용 값)와 `https://ocr-rho-ashen.vercel.app`임을 확인. 브라우저에서 `#pin=4821`로 열면 저장되고 주소의 `pin`이 지워지며, `#pin=12`는 저장되지 않음을 확인. 자동 테스트 64개 통과. (실제 휴대폰 카메라로 찍는 것은 직접 확인 필요)
 - **주의:** QR에 비밀번호가 들어 있으므로 보여주는 사람을 가려야 함. 유출 시 Vercel의 `APP_PIN`을 바꾸고 새 QR을 만들면 이전 QR은 무효.
 - **파일:** `src/lib/autoLogin.ts`(신규), `src/main.tsx`, `scripts/make-qr.mjs`(신규), `package.json`(`qr` 명령, `qrcode` 추가), `.gitignore`, `README.md`, `tests/autoLogin.test.ts`(신규)
-- **커밋:** (배포 후 기록)
+- **커밋:** `5de6a2d`
 
 ### 사용 설명의 가족 호칭을 "사용자"로 변경
 - **전:** README와 `.env.example`의 사용 설명(사용 방법 제목, 설치 단계 제목, 비밀번호 안내 등)에 특정 가족을 가리키는 표현이 있었음.
