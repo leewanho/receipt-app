@@ -6,6 +6,7 @@ import { deleteReceipt, getImage, listReceipts, saveReceipt } from '../lib/db';
 import { createWorkbookFile } from '../lib/excel';
 import { filterByPeriod, type Period } from '../lib/excelRows';
 import { formatDateFull, formatWon, monthTotal } from '../lib/format';
+import { monthlyTotals, sumAll } from '../lib/totals';
 import { canShareFile, downloadFile, shareFile } from '../lib/share';
 import type { Receipt } from '../types';
 
@@ -33,6 +34,7 @@ export function ListScreen({ onBack }: ListScreenProps) {
   const [receipts, setReceipts] = useState<Receipt[] | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [undoId, setUndoId] = useState<string | null>(null);
+  const [showMonthly, setShowMonthly] = useState(false);
   const [panel, setPanel] = useState<Panel>({ kind: 'none' });
   const [editing, setEditing] = useState<{ receipt: Receipt; image?: Blob } | null>(null);
   const pending = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -173,6 +175,30 @@ export function ListScreen({ onBack }: ListScreenProps) {
         </span>
         <strong>{formatWon(monthTotal(visible))}</strong>
       </div>
+
+      {visible.length > 0 && (
+        <>
+          <div className="month-total sub">
+            <span>전체 합계 ({visible.length}장)</span>
+            <strong>{formatWon(sumAll(visible))}</strong>
+          </div>
+          <BigButton variant="plain" onClick={() => setShowMonthly((v) => !v)}>
+            {showMonthly ? '월별 합계 닫기' : '📊 월별 합계 보기'}
+          </BigButton>
+          {showMonthly && (
+            <ul className="monthly-list">
+              {monthlyTotals(visible).map((m) => (
+                <li key={m.month || 'none'}>
+                  <span>
+                    {m.label} <small>({m.count}장)</small>
+                  </span>
+                  <strong>{formatWon(m.total)}</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
 
       {receipts === null ? (
         <p>불러오는 중이에요…</p>

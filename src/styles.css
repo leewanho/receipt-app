@@ -91,6 +91,18 @@ button:focus-visible, input:focus-visible { outline: 4px solid #000; outline-off
   padding: 14px; border: 3px solid var(--accent); border-radius: 14px; font-size: 1.1rem;
 }
 .month-total strong { font-size: 1.5rem; color: var(--accent); }
+.month-total.sub { border-color: var(--line); font-size: 1rem; }
+.month-total.sub strong { font-size: 1.25rem; color: var(--text); }
+.monthly-list {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+  border: 2px solid var(--line); border-radius: 12px; overflow: hidden;
+}
+.monthly-list li {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 14px; font-size: 1.1rem; border-bottom: 1px solid var(--line);
+}
+.monthly-list li:last-child { border-bottom: 0; }
+.monthly-list small { color: var(--muted); font-size: 0.9rem; }
 .receipt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .receipt-row {
   width: 100%; min-height: 72px; padding: 10px 14px; text-align: left;
