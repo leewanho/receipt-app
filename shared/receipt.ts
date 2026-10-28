@@ -22,7 +22,14 @@ export interface ReceiptJSON {
   items: ReceiptItem[];
 }
 
-export type OcrErrorCode = 'BUSY' | 'BAD_PIN' | 'DAILY_LIMIT' | 'BAD_IMAGE' | 'SERVER';
+export type OcrErrorCode =
+  | 'BUSY'
+  | 'TIMEOUT'
+  | 'UNREADABLE'
+  | 'BAD_PIN'
+  | 'DAILY_LIMIT'
+  | 'BAD_IMAGE'
+  | 'SERVER';
 
 export interface OcrErrorBody {
   code: OcrErrorCode;

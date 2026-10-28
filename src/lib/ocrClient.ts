@@ -1,20 +1,11 @@
 import { normalizeReceipt, type OcrErrorCode, type ReceiptJSON } from '../../shared/receipt';
 import { PIN_STORAGE_KEY } from '../config/limits';
 import { blobToBase64 } from './image';
-
-/** 오류는 원인이 아니라 "할 일"로 안내한다 */
-export const OCR_ERROR_MESSAGES: Record<OcrErrorCode | 'OFFLINE', string> = {
-  BUSY: '지금 사람이 많아요. 잠시 후 다시 눌러주세요.',
-  DAILY_LIMIT: '오늘은 여기까지예요. 내일 다시 눌러주세요.',
-  BAD_PIN: '비밀번호가 맞지 않아요. 다시 입력해 주세요.',
-  BAD_IMAGE: '사진을 읽지 못했어요. 다시 찍어주세요.',
-  SERVER: '잠시 문제가 생겼어요. 조금 뒤에 다시 눌러주세요.',
-  OFFLINE: '인터넷 연결을 확인하고 다시 눌러주세요.',
-};
+import { describeProblem } from './problem';
 
 export class OcrClientError extends Error {
   constructor(readonly code: OcrErrorCode | 'OFFLINE') {
-    super(OCR_ERROR_MESSAGES[code]);
+    super(describeProblem(code, 1).message);
     this.name = 'OcrClientError';
   }
 }
@@ -43,7 +34,7 @@ export const clearPin = (): void => {
   }
 };
 
-const KNOWN_CODES: OcrErrorCode[] = ['BUSY', 'BAD_PIN', 'DAILY_LIMIT', 'BAD_IMAGE', 'SERVER'];
+const KNOWN_CODES: OcrErrorCode[] = ['BUSY', 'TIMEOUT', 'UNREADABLE', 'BAD_PIN', 'DAILY_LIMIT', 'BAD_IMAGE', 'SERVER'];
 
 /** 압축된 사진 한 장을 서버로 보내 인식 결과를 받는다 */
 export async function extractReceipt(image: Blob, pin: string): Promise<ReceiptJSON> {

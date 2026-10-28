@@ -1,6 +1,13 @@
 import { normalizeReceipt, type ReceiptJSON } from '../../../shared/receipt.js';
 import { SYSTEM_PROMPT, USER_PROMPT, buildSchema } from '../prompt.js';
-import { ProviderError, RateLimitError, fetchWithTimeout, type OcrImage, type OcrProvider } from './types.js';
+import {
+  ProviderError,
+  RateLimitError,
+  UnreadableError,
+  fetchWithTimeout,
+  type OcrImage,
+  type OcrProvider,
+} from './types.js';
 
 const DEFAULT_MODEL = 'claude-haiku-5-5';
 const TOOL_NAME = 'save_receipt';
@@ -54,7 +61,7 @@ export function createClaudeProvider(env: NodeJS.ProcessEnv = process.env): OcrP
 
       const data = (await res.json()) as ClaudeResponse;
       const toolUse = data.content?.find((c) => c.type === 'tool_use');
-      if (!toolUse) throw new ProviderError('claude returned no tool_use');
+      if (!toolUse) throw new UnreadableError('claude returned no tool_use');
       return normalizeReceipt(toolUse.input);
     },
   };

@@ -5,14 +5,9 @@ import { ReviewForm } from '../components/ReviewForm';
 import { saveReceipt } from '../lib/db';
 import { toDraft } from '../lib/draft';
 import { compressImage } from '../lib/image';
-import {
-  OcrClientError,
-  OCR_ERROR_MESSAGES,
-  clearPin,
-  extractReceipt,
-  getStoredPin,
-  storePin,
-} from '../lib/ocrClient';
+import { OcrClientError, clearPin, extractReceipt, getStoredPin, storePin } from '../lib/ocrClient';
+import { describeProblem, type ProblemKind } from '../lib/problem';
+import { emptyReceiptJSON } from '../../shared/receipt';
 import type { Receipt } from '../types';
 
 interface ScanFlowProps {
@@ -24,10 +19,8 @@ interface ScanFlowProps {
 type Phase =
   | { kind: 'pin' }
   | { kind: 'reading' }
-  | { kind: 'review'; draft: Receipt; image: Blob }
-  | { kind: 'problem'; message: string };
-
-const NOT_RECEIPT = '영수증이 아닌 것 같아요. 다시 찍어주세요.';
+  | { kind: 'review'; draft: Receipt; image?: Blob }
+  | { kind: 'problem'; problem: ProblemKind };
 
 /** 사진을 한 장씩 읽고 → 확인 → 저장을 반복한다 */
 export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
@@ -36,6 +29,9 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
   const [pinText, setPinText] = useState('');
   const [saved, setSaved] = useState<Receipt[]>([]);
   const runId = useRef(0);
+  /** 지금 사진을 몇 번 읽다가 실패했는지, 줄여 둔 사진(직접 적어 넣을 때 함께 저장) */
+  const failures = useRef(0);
+  const lastImage = useRef<Blob | undefined>(undefined);
 
   const total = files.length;
   const known = [...existing, ...saved];
@@ -45,9 +41,16 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
       onFinish();
       return;
     }
+    failures.current = 0;
+    lastImage.current = undefined;
     setIndex(index + 1);
     setPhase({ kind: 'reading' });
   }, [index, total, onFinish]);
+
+  /** 읽기를 포기하고 사진을 보면서 직접 적어 넣는다 */
+  const startManual = (): void => {
+    setPhase({ kind: 'review', draft: toDraft(emptyReceiptJSON()), image: lastImage.current });
+  };
 
   const read = useCallback(async (): Promise<void> => {
     const myRun = ++runId.current;
@@ -57,11 +60,23 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
       return;
     }
     setPhase({ kind: 'reading' });
+    let image: Blob;
     try {
-      const image = await compressImage(files[index]);
+      image = await compressImage(files[index]);
+    } catch {
+      if (myRun === runId.current) setPhase({ kind: 'problem', problem: 'BAD_IMAGE' });
+      return;
+    }
+    lastImage.current = image;
+    try {
       const json = await extractReceipt(image, pin);
       if (myRun !== runId.current) return;
-      setPhase(json.is_receipt ? { kind: 'review', draft: toDraft(json), image } : { kind: 'problem', message: NOT_RECEIPT });
+      if (json.is_receipt) {
+        setPhase({ kind: 'review', draft: toDraft(json), image });
+      } else {
+        failures.current += 1;
+        setPhase({ kind: 'problem', problem: 'NOT_RECEIPT' });
+      }
     } catch (e: unknown) {
       if (myRun !== runId.current) return;
       if (e instanceof OcrClientError && e.code === 'BAD_PIN') {
@@ -69,10 +84,8 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
         setPhase({ kind: 'pin' });
         return;
       }
-      setPhase({
-        kind: 'problem',
-        message: e instanceof OcrClientError ? e.message : OCR_ERROR_MESSAGES.BAD_IMAGE,
-      });
+      failures.current += 1;
+      setPhase({ kind: 'problem', problem: e instanceof OcrClientError ? e.code : 'SERVER' });
     }
   }, [files, index]);
 
@@ -130,10 +143,14 @@ export function ScanFlow({ files, existing, onFinish }: ScanFlowProps) {
   }
 
   if (phase.kind === 'problem') {
+    const view = describeProblem(phase.problem, failures.current);
     return (
-      <Screen title="다시 해볼까요?" onBack={leave}>
-        <Message tone="error">{phase.message}</Message>
-        <BigButton onClick={() => void read()}>다시 읽기</BigButton>
+      <Screen title={view.canRetry ? '다시 해볼까요?' : '읽지 못했어요'} onBack={leave}>
+        <Message tone="error">{view.message}</Message>
+        {view.canRetry && <BigButton onClick={() => void read()}>다시 읽기</BigButton>}
+        <BigButton variant={view.canRetry ? 'plain' : 'primary'} onClick={startManual}>
+          ✏️ 직접 적어 넣기
+        </BigButton>
         <BigButton variant="plain" onClick={goNext}>
           {index + 1 >= total ? '처음으로' : '이 사진 건너뛰기'}
         </BigButton>

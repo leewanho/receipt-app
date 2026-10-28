@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { OcrErrorCode } from '../shared/receipt.js';
 import { isPinValid } from './_lib/auth.js';
-import { extractWithFallback, getProviderChain, RateLimitError } from './_lib/providers/index.js';
+import { errorCodeFor } from './_lib/errors.js';
+import { extractWithFallback, getProviderChain } from './_lib/providers/index.js';
 import { checkDailyLimit } from './_lib/rateLimit.js';
 
 // 압축된 사진은 보통 0.5MB 이하. Vercel 요청 한도(4.5MB)보다 작게 막는다.
@@ -12,6 +13,8 @@ const STATUS: Record<OcrErrorCode, number> = {
   BAD_PIN: 401,
   DAILY_LIMIT: 429,
   BUSY: 429,
+  TIMEOUT: 504,
+  UNREADABLE: 422,
   BAD_IMAGE: 400,
   SERVER: 500,
 };
@@ -53,12 +56,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const result = await extractWithFallback({ base64: body.image, mime: 'image/jpeg' }, chain);
     res.status(200).json(result);
   } catch (e: unknown) {
-    if (e instanceof RateLimitError) {
-      fail(res, 'BUSY');
-      return;
-    }
-    // 사진·키 등 민감 정보는 남기지 않고 오류 종류만 기록
-    console.error('ocr failed:', e instanceof Error ? e.message : 'unknown');
-    fail(res, 'SERVER');
+    // 사진·키 등 민감 정보는 남기지 않고 오류 종류만 기록 (원인을 나중에 알 수 있도록 한도·시간 초과도 기록)
+    const code = errorCodeFor(e);
+    console.error(`ocr failed [${code}]:`, e instanceof Error ? e.message : 'unknown');
+    fail(res, code);
   }
 }

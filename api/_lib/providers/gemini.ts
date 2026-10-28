@@ -1,6 +1,13 @@
 import { normalizeReceipt, type ReceiptJSON } from '../../../shared/receipt.js';
 import { SYSTEM_PROMPT, USER_PROMPT, buildSchema } from '../prompt.js';
-import { ProviderError, RateLimitError, fetchWithTimeout, type OcrImage, type OcrProvider } from './types.js';
+import {
+  ProviderError,
+  RateLimitError,
+  UnreadableError,
+  fetchWithTimeout,
+  type OcrImage,
+  type OcrProvider,
+} from './types.js';
 
 const DEFAULT_MODEL = 'gemini-3.6-flash';
 
@@ -34,6 +41,8 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): OcrP
             ],
             generationConfig: {
               temperature: 0,
+              // 품목이 많거나 외국어 영수증이면 답이 길어져 중간에 잘릴 수 있어 넉넉히 둔다
+              maxOutputTokens: 8192,
               responseMimeType: 'application/json',
               responseSchema: buildSchema('gemini'),
             },
@@ -49,7 +58,7 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): OcrP
       try {
         return normalizeReceipt(JSON.parse(text));
       } catch {
-        throw new ProviderError('gemini returned invalid JSON');
+        throw new UnreadableError('gemini returned no usable JSON');
       }
     },
   };

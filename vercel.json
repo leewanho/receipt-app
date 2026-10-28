@@ -1,3 +1,3 @@
 {
-  "functions": { "api/ocr.ts": { "maxDuration": 30 } }
+  "functions": { "api/ocr.ts": { "maxDuration": 60 } }
 }
