@@ -5,7 +5,7 @@ import { ReviewForm } from '../components/ReviewForm';
 import { deleteReceipt, getImage, listReceipts, saveReceipt } from '../lib/db';
 import { createWorkbookFile } from '../lib/excel';
 import { filterByPeriod, type Period } from '../lib/excelRows';
-import { formatDateKo, formatWon, monthTotal } from '../lib/format';
+import { formatDateFull, formatWon, monthTotal } from '../lib/format';
 import { canShareFile, downloadFile, shareFile } from '../lib/share';
 import type { Receipt } from '../types';
 
@@ -168,7 +168,9 @@ export function ListScreen({ onBack }: ListScreenProps) {
       footer={<BigButton onClick={() => setPanel({ kind: 'period' })}>📥 엑셀로 받기</BigButton>}
     >
       <div className="month-total">
-        <span>이번 달 합계</span>
+        <span>
+          {new Date().getFullYear()}년 {new Date().getMonth() + 1}월 합계
+        </span>
         <strong>{formatWon(monthTotal(visible))}</strong>
       </div>
 
@@ -181,7 +183,7 @@ export function ListScreen({ onBack }: ListScreenProps) {
           {visible.map((r) => (
             <li key={r.id}>
               <button type="button" className="receipt-row" onClick={() => void openEdit(r)}>
-                <span className="row-date">{formatDateKo(r.date)}</span>
+                <span className="row-date">{formatDateFull(r.date)}</span>
                 <span className="row-merchant">{r.merchant ?? '사용처 없음'}</span>
                 <span className="row-amount">{formatWon(r.total ?? 0)}</span>
               </button>

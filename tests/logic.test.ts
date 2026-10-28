@@ -152,3 +152,11 @@ describe('Upstash 연결 정보 찾기', () => {
     expect(findRedisCredentials({} as NodeJS.ProcessEnv)).toEqual({ url: undefined, token: undefined });
   });
 });
+
+describe('목록 날짜 표시(연도 포함)', () => {
+  it('연도까지 보여준다', async () => {
+    const { formatDateFull } = await import('../src/lib/format');
+    expect(formatDateFull('2025-10-31')).toBe('2025년 10월 31일');
+    expect(formatDateFull(null)).toBe('날짜 없음');
+  });
+});
